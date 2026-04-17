@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Features Dashboard — izam.co</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700&display=swap');
+:root {
+  --bg:#080b12; --s1:#0e1219; --s2:#131824; --s3:#1a2030;
+  --border:#1e2738; --border2:#26304a;
+  --text:#dce6f5; --muted:#566480; --muted2:#7a8db0;
+  --accent:#4f8ef7; --cyan:#22d3ee; --green:#10b981;
+  --yellow:#f59e0b; --red:#f43f5e; --orange:#fb923c; --purple:#a78bfa;
+  --pi:#4f8ef7; --exp:#22d3ee;
+  --mono:'JetBrains Mono',monospace; --sans:'Sora',sans-serif;
+}
+body.light {
+  --bg:#f0f2f7; --s1:#ffffff; --s2:#f5f7fb; --s3:#eaecf4;
+  --border:#dde1ed; --border2:#c8cede;
+  --text:#1a2033; --muted:#8892aa; --muted2:#5a6680;
+  --accent:#2563eb; --cyan:#0891b2; --green:#059669;
+  --yellow:#d97706; --red:#dc2626; --orange:#ea580c; --purple:#7c3aed;
+  --pi:#2563eb; --exp:#0891b2;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:13px}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.hdr-logo{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.hdr-logo span{color:var(--muted);font-weight:400}
+.hdr-title{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.upload-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s}
+.upload-btn:hover{border-color:var(--accent);color:var(--accent)}
+.upload-btn input{display:none}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0}
+
+/* FILTER BAR */
+.fbar{background:var(--s1);border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.flabel{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;white-space:nowrap}
+.fgroup{display:flex;gap:3px}
+.fbtn{padding:4px 11px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-size:10px;font-family:var(--mono);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fbtn:hover{border-color:var(--accent);color:var(--accent)}
+.fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.fbtn.ep.active{background:var(--green);border-color:var(--green)}
+.fbtn.er.active{background:var(--yellow);border-color:var(--yellow);color:#000}
+.fbtn.eu.active{background:var(--muted);border-color:var(--muted);color:#fff}
+.fselect{padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--s2);color:var(--text);font-size:10px;font-family:var(--mono);cursor:pointer;outline:none}
+.fbar-right{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* MAIN */
+.main{padding:22px 28px;display:flex;flex-direction:column;gap:20px}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:15px 16px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--kc,var(--accent)) 0%,transparent 100%)}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-bottom:8px}
+.kpi-val{font-size:24px;font-weight:700;font-family:var(--mono);line-height:1;color:var(--kc,var(--text))}
+.kpi-sub{font-size:9px;color:var(--muted);margin-top:5px;font-family:var(--mono)}
+.kpi-sub b{color:var(--muted2)}
+
+/* PENDING REVIEW HIGHLIGHT */
+.kpi.rfr-highlight{border-color:var(--yellow);box-shadow:0 0 0 1px rgba(245,158,11,.15),inset 0 0 20px rgba(245,158,11,.03)}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g7030{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.g6040{display:grid;grid-template-columns:3fr 2fr;gap:14px}
+.g3070{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+.g4060{display:grid;grid-template-columns:2fr 3fr;gap:14px}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:18px 20px}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:10px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;font-family:var(--mono)}
+.card-badge{font-size:9px;padding:2px 8px;border-radius:3px;background:var(--s3);color:var(--muted2);font-family:var(--mono);border:1px solid var(--border)}
+.chart-wrap{position:relative}
+
+/* DIVIDER */
+.sdiv{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.sdiv::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FUNNEL */
+.funnel{display:flex;flex-direction:column;gap:5px}
+.frow{display:flex;align-items:center;gap:8px}
+.fname{font-size:10px;font-family:var(--mono);width:126px;flex-shrink:0}
+.fbar-outer{flex:1;height:18px;background:var(--s3);border-radius:3px;overflow:hidden}
+.fbar-inner{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:9px;font-family:var(--mono)}
+.fpct{font-family:var(--mono);font-size:10px;width:38px;text-align:right}
+.fn{font-family:var(--mono);font-size:9px;color:var(--muted);width:32px;text-align:right}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9px;color:var(--muted);text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.tbl td{padding:7px 8px;font-size:11px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--s2)}
+.rank{font-family:var(--mono);color:var(--muted);font-size:9px}
+.sname{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.mono{font-family:var(--mono)}
+.scroll-t{max-height:280px;overflow-y:auto}
+.scroll-t::-webkit-scrollbar{width:3px}
+.scroll-t::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* PILLS */
+.pill{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-family:var(--mono);font-weight:500}
+.pill-pi{background:rgba(79,142,247,.15);color:var(--pi)}
+.pill-exp{background:rgba(34,211,238,.15);color:var(--exp)}
+.pill-web{background:rgba(79,142,247,.1);color:var(--accent)}
+.pill-mob{background:rgba(86,100,128,.1);color:var(--muted)}
+
+/* HORIZONTAL BAR ROWS */
+.hbrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.hbrow:last-child{border-bottom:none}
+.hblabel{flex:1;font-size:11px}
+.hbbar-w{width:110px;height:4px;background:var(--s3);border-radius:2px;flex-shrink:0}
+.hbbar{height:4px;border-radius:2px}
+.hbcnt{font-family:var(--mono);font-size:10px;color:var(--muted);width:32px;text-align:right}
+
+/* WRONG DOC: two-column layout */
+.wdt-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.wdt-col-title{font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+/* FILE TYPE TILES */
+.ft-tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.ft-tile{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:12px 10px;text-align:center}
+.ft-ext{font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:4px}
+.ft-rate{font-size:18px;font-weight:700;font-family:var(--mono)}
+.ft-lbl{font-size:9px;color:var(--muted);margin-top:1px}
+.ft-vol{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:4px}
+
+/* MODE */
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:none}
+.mlabel{font-size:11px;width:110px}
+.mbar-w{flex:1;height:5px;background:var(--s3);border-radius:3px}
+.mbar{height:5px;border-radius:3px}
+.mval{font-family:var(--mono);font-size:11px;width:55px;text-align:right}
+
+/* RFR AGE */
+.age-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.age-bucket{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;text-align:center}
+.age-val{font-size:20px;font-weight:700;font-family:var(--mono)}
+.age-label{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+
+/* NEW SITES SECTION */
+.ns-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.ns-drill{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.ns-drill-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--border)}
+.ns-drill-title{font-size:10px;font-family:var(--mono);color:var(--muted2)}
+.ns-date-sel{padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:var(--s3);color:var(--text);font-size:10px;font-family:var(--mono);outline:none;cursor:pointer}
+.ns-list{max-height:260px;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.ns-list::-webkit-scrollbar{width:3px}
+.ns-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.ns-site{font-size:11px;padding:4px 8px;border-radius:4px;border-left:2px solid;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* QSTAT */
+.qrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.qrow:last-child{border-bottom:none}
+.qkey{font-size:11px;color:var(--muted2)}
+.qval{font-family:var(--mono);font-size:11px}
+
+/* EMPTY */
+.empty{text-align:center;color:var(--muted);padding:60px;font-size:12px;font-family:var(--mono)}
+
+/* RISK TABLE */
+.risk-row-red td{background:rgba(244,63,94,.04)}
+.risk-row-red:hover td{background:rgba(244,63,94,.09)!important}
+.risk-row-green td{background:rgba(16,185,129,.03)}
+.risk-row-green:hover td{background:rgba(16,185,129,.07)!important}
+.risk-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-family:var(--mono);font-weight:600}
+.risk-red{background:rgba(244,63,94,.15);color:var(--red)}
+.risk-green{background:rgba(16,185,129,.12);color:var(--green)}
+.view-more-btn{display:block;width:100%;margin-top:10px;padding:8px;border-radius:5px;border:1px dashed var(--border2);background:transparent;color:var(--muted2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s;text-align:center}
+.view-more-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TOOLTIP */
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:9px;font-family:var(--mono);cursor:default;flex-shrink:0;position:relative;transition:all .15s;user-select:none}
+.info-btn:hover{border-color:var(--accent);color:var(--accent)}
+.info-btn .tip{display:none;position:absolute;top:calc(100% + 6px);right:0;width:220px;background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;font-size:10px;color:var(--muted2);font-family:var(--sans);line-height:1.5;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;font-weight:400;text-transform:none;letter-spacing:0}
+.info-btn:hover .tip{display:block}
+
+@media(max-width:1280px){
+  .kpi-strip{grid-template-columns:repeat(4,1fr)}
+  .g2,.g3,.g7030,.g6040,.g3070,.g4060{grid-template-columns:1fr}
+  .ft-tiles{grid-template-columns:repeat(3,1fr)}
+  .wdt-cols{grid-template-columns:1fr}
+  .ns-layout{grid-template-columns:1fr}
+  .age-strip{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body class="light">
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="hdr-logo">izam<span>.co</span></div>
+    <div class="hdr-title">AI Features Analytics</div>
+  </div>
+  <div class="hdr-right">
+    <button id="themeToggle" onclick="toggleTheme()" style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s" onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseleave="this.style.borderColor='var(--border2)';this.style.color='var(--muted2)'">
+      <span id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+    </button>
+    <label class="upload-btn">
+      <div class="live-dot"></div>
+      <span id="lblBatch">Upload Batch CSV</span>
+      <input type="file" id="csvBatch" accept=".csv">
+    </label>
+    <label class="upload-btn">
+      <div class="live-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></div>
+      <span id="lblAction">Upload Action Log CSV</span>
+      <input type="file" id="csvAction" accept=".csv">
+    </label>
+  </div>
+</div>
+
+<div class="fbar">
+  <span class="flabel">Environment</span>
+  <div class="fgroup" id="envBtns">
+    <button class="fbtn ep active" data-env="production">production</button>
+    <button class="fbtn er" data-env="release">release</button>
+    <button class="fbtn eu" data-env="unknown">unknown</button>
+    <button class="fbtn" data-env="all">all</button>
+  </div>
+  <span class="flabel" style="margin-left:8px">Feature</span>
+  <div class="fgroup" id="typeBtns">
+    <button class="fbtn active" data-type="all">All</button>
+    <button class="fbtn" data-type="Purchase Invoice">Purchase Invoice</button>
+    <button class="fbtn" data-type="Expense">Expense</button>
+  </div>
+  <span class="flabel" style="margin-left:8px">Period</span>
+  <select class="fselect" id="periodSel">
+    <option value="all">All time</option>
+    <option value="7">Last 7 days</option>
+    <option value="14">Last 14 days</option>
+    <option value="30">Last 30 days</option>
+  </select>
+  <div class="fbar-right" id="dataRange">—</div>
+</div>
+
+<div class="main" id="main">
+  <div class="empty">Loading data…</div>
+</div>
+
+<script>
+let isDark = false;
+// ══ DATA (injected) ══════════════════════════════
+let BATCH_RAW = [];
+let ERRORS_RAW = [];
+let OVERRIDES_RAW = [];
+let BATCHES_RAW = [];
+let FIRST_TIMERS = {};
+let NEW_DAILY = {};
+let RFR_RAW = [];
+let RETENTION = {};
+
+let B=[], E=[], O=[], BAT=[], RFR=[];
+let activeEnv='production', activeType='all', activePeriod='all';
+
+// ══ FILTERS ══════════════════════════════════════
+document.querySelectorAll('#envBtns .fbtn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#envBtns .fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); activeEnv=btn.dataset.env; applyFilters();
+}));
+document.querySelectorAll('#typeBtns .fbtn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#typeBtns .fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); activeType=btn.dataset.type; applyFilters();
+}));
+document.getElementById('periodSel').addEventListener('change',e=>{activePeriod=e.target.value;applyFilters();});
+
+function applyFilters(){
+  let cutoff=null;
+  if(activePeriod!=='all'){cutoff=new Date();cutoff.setDate(cutoff.getDate()-parseInt(activePeriod));}
+  const envF=r=>(activeEnv==='all'||r.Environment===activeEnv||r.environment===activeEnv);
+  const typeF=r=>(activeType==='all'||r.Type===activeType||r.batch_type===activeType);
+  const dateF=r=>(!cutoff||!r['Created At']||new Date(r['Created At'])>=cutoff);
+  const dateFd=r=>(!cutoff||!r.date||new Date(r.date)>=cutoff);
+  B=BATCH_RAW.filter(r=>envF(r)&&typeF(r)&&dateF(r));
+  E=ERRORS_RAW.filter(r=>envF(r)&&dateFd(r));
+  O=OVERRIDES_RAW.filter(r=>envF(r)&&dateFd(r));
+  BAT=BATCHES_RAW.filter(r=>envF(r)&&typeF(r)&&dateFd(r));
+  RFR=RFR_RAW.filter(r=>envF(r));
+  render();
+}
+
+// ══ CSV UPLOAD ════════════════════════════════════
+function parseCSVLine(line){
+  const res=[];let cur='';let inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(ch===','&&!inQ){res.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  res.push(cur.trim());return res;
+}
+function parseCSV(text){
+  const lines=text.split('\n');
+  const headers=parseCSVLine(lines[0]);
+  const result=[];
+  const today=new Date();today.setHours(0,0,0,0);
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const vals=parseCSVLine(lines[i]);
+    const row={};
+    headers.forEach((h,idx)=>{let v=vals[idx]??'';if(v===''||v==='nan'||v==='NaN')v=null;row[h]=v;});
+    if(row['Created At']&&new Date(row['Created At'])>=today)continue;
+    if(row['Cost']!==null)row['Cost']=parseFloat(row['Cost']);
+    if(row['Tokens']!==null)row['Tokens']=parseFloat(row['Tokens']);
+    try{const m=JSON.parse(row['Meta']||'{}');row['quick_mode']=m.quick_mode!==undefined?String(m.quick_mode):null;}catch{row['quick_mode']=null;}
+    try{const f=JSON.parse(row['Files']||'[]');row['filetype']=f.length?f[0].filetype:null;}catch{row['filetype']=null;}
+    row['Environment']=row['Environment']||'unknown';
+    row['date']=row['Created At']?row['Created At'].substring(0,10):null;
+    result.push(row);
+  }
+  return result;
+}
+document.getElementById('csvBatch').addEventListener('change',async function(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('lblBatch').textContent='Uploading…';
+  try{
+    // Step 1: get signed upload URL from server
+    const tokenRes=await fetch('/api/upload-url',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({filename:'latest-batch.csv',contentType:'text/csv'})
+    });
+    if(!tokenRes.ok)throw new Error(await tokenRes.text());
+    const {url,fields}=await tokenRes.json();
+    // Step 2: upload directly to Vercel Blob
+    const form=new FormData();
+    if(fields)Object.entries(fields).forEach(([k,v])=>form.append(k,v));
+    form.append('file',file);
+    const uploadRes=await fetch(url,{method:'POST',body:form});
+    if(!uploadRes.ok)throw new Error('Direct upload failed');
+    // Step 3: trigger processing
+    const procRes=await fetch('/api/process',{method:'POST'});
+    if(!procRes.ok)throw new Error(await procRes.text());
+    document.getElementById('lblBatch').textContent=`✓ ${file.name}`;
+    await loadData();
+  }catch(err){
+    document.getElementById('lblBatch').textContent='Upload failed';
+    alert('Upload error: '+err.message);
+  }
+});
+document.getElementById('csvAction').addEventListener('change',async function(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('lblAction').textContent='Uploading…';
+  try{
+    // Step 1: get signed upload URL
+    const tokenRes=await fetch('/api/upload-url',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({filename:'latest-action.csv',contentType:'text/csv'})
+    });
+    if(!tokenRes.ok)throw new Error(await tokenRes.text());
+    const {url,fields}=await tokenRes.json();
+    // Step 2: upload directly to Vercel Blob
+    const form=new FormData();
+    if(fields)Object.entries(fields).forEach(([k,v])=>form.append(k,v));
+    form.append('file',file);
+    const uploadRes=await fetch(url,{method:'POST',body:form});
+    if(!uploadRes.ok)throw new Error('Direct upload failed');
+    // Step 3: trigger processing
+    const procRes=await fetch('/api/process',{method:'POST'});
+    if(!procRes.ok)throw new Error(await procRes.text());
+    document.getElementById('lblAction').textContent=`✓ ${file.name}`;
+    await loadData();
+  }catch(err){
+    document.getElementById('lblAction').textContent='Upload failed';
+    alert('Upload error: '+err.message);
+  }
+});
+
+function catError(e){
+  if(!e)return'Other';const el=e.toLowerCase();
+  if(el.includes('rate limit'))return'Rate Limit';
+  if(el.includes('context window'))return'Context Window';
+  if(el.startsWith('limit_invoice'))return'Too Many Invoices in File';
+  if(el.startsWith('limit_expense'))return'Too Many Expenses in File';
+  if(el.includes('insufficient'))return'Insufficient Coins';
+  if(el.includes('invalid document')||el.includes('invalid input'))return'Wrong Doc Type';
+  if((el.includes('supplier')||el.includes('address'))&&(el.includes('not present')||el.includes('not found')||el.includes('not legible')))return'Unreadable Document';
+  if(el.includes('undefined')||el.includes('exception')||el.includes('ifplugininstalled'))return'Code Error';
+  return'Other';
+}
+function extractWDT(e){
+  if(!e)return null;
+  const m=e.match(/found:\s*(.+)$/i);
+  if(m)return m[1].replace(/_/g,' ').replace(/\(.*?\)/g,'').trim().toLowerCase();
+  return null;
+}
+
+// ══ CHARTS ════════════════════════════════════════
+const _charts={};
+function mkChart(id,cfg){
+  if(_charts[id])_charts[id].destroy();
+  const ctx=document.getElementById(id);if(!ctx)return;
+  _charts[id]=new Chart(ctx.getContext('2d'),cfg);
+}
+function gc(){return isDark?'#1e2738':'#dde1ed';}
+function tk(){return {color:isDark?'#566480':'#8892aa',font:{family:'JetBrains Mono',size:9}};}
+
+function updateRange(){
+  const dates=BATCH_RAW.map(r=>r['Created At']).filter(Boolean).sort();
+  if(dates.length)document.getElementById('dataRange').textContent=
+    `${dates[0].substring(0,10)} → ${dates[dates.length-1].substring(0,10)} · ${BATCH_RAW.length.toLocaleString()} records`;
+}
+
+// ══ RENDER ════════════════════════════════════════
+function render(){
+  if(!B.length){document.getElementById('main').innerHTML='<div class="empty">No data for selected filters.</div>';return;}
+
+  const total=B.length;
+  const completed=B.filter(r=>r.Status==='Completed').length;
+  const failed=B.filter(r=>r.Status==='Failed').length;
+  const rfr=B.filter(r=>r.Status==='Ready for Review').length;
+  const totalCost=B.reduce((s,r)=>s+(r.Cost||0),0);
+  const totalTokens=B.reduce((s,r)=>s+(r.Tokens||0),0);
+  const costRows=B.filter(r=>r.Cost);
+  const avgCost=costRows.length?(totalCost/costRows.length).toFixed(1):0;
+  const compRate=(completed/total*100).toFixed(1);
+  const failRate=(failed/total*100).toFixed(1);
+  const uniqueSites=new Set(B.map(r=>r['Site ID'])).size;
+  const webSites=new Set(B.filter(r=>!r.Platform||r.Platform==='Web').map(r=>r['Site ID'])).size;
+  const mobileSites=new Set(B.filter(r=>r.Platform==='Mobile').map(r=>r['Site ID'])).size;
+  const piRows=B.filter(r=>r.Type==='Purchase Invoice');
+  const expRows=B.filter(r=>r.Type==='Expense');
+  const qmT=B.filter(r=>r.quick_mode==='true'||r.quick_mode==='True');
+  const qmF=B.filter(r=>r.quick_mode==='false'||r.quick_mode==='False');
+  const qmTAvg=qmT.filter(r=>r.Cost).length?(qmT.reduce((s,r)=>s+(r.Cost||0),0)/qmT.filter(r=>r.Cost).length).toFixed(1):0;
+  const qmFAvg=qmF.filter(r=>r.Cost).length?(qmF.reduce((s,r)=>s+(r.Cost||0),0)/qmF.filter(r=>r.Cost).length).toFixed(1):0;
+
+  // daily
+  const byDate={};
+  B.forEach(r=>{
+    if(!r.date)return;
+    if(!byDate[r.date])byDate[r.date]={pi:0,exp:0,cost:0,failed:0};
+    r.Type==='Purchase Invoice'?byDate[r.date].pi++:byDate[r.date].exp++;
+    byDate[r.date].cost+=r.Cost||0;
+    if(r.Status==='Failed')byDate[r.date].failed++;
+  });
+  const sortedDates=Object.keys(byDate).sort();
+
+  // status
+  const statusCounts={};
+  B.forEach(r=>{statusCounts[r.Status]=(statusCounts[r.Status]||0)+1;});
+  const statusOrder=['Completed','Ready for Review','Failed','Queued','AI Processing','Limit Exceeded','Paused','Deleted'];
+  const statusColors={'Completed':'#10b981','Failed':'#f43f5e','Ready for Review':'#4f8ef7','Queued':'#f59e0b','AI Processing':'#a78bfa','Deleted':'#566480','Limit Exceeded':'#fb923c','Paused':'#566480'};
+
+  // filetypes
+  const ftStats={};
+  B.forEach(r=>{const ft=r.filetype||'unknown';if(!ftStats[ft])ftStats[ft]={total:0,failed:0};ftStats[ft].total++;if(r.Status==='Failed')ftStats[ft].failed++;});
+
+  // errors
+  const errCats={};E.forEach(r=>{errCats[r.category]=(errCats[r.category]||0)+1;});
+  const errArr=Object.entries(errCats).sort((a,b)=>b[1]-a[1]);
+  const maxErr=errArr[0]?.[1]||1;
+
+  // wrong doc by feature
+  const wdtPI={},wdtExp={};
+  E.filter(r=>r.wrong_doc_type).forEach(r=>{
+    if(r.feature_type==='Purchase Invoice')wdtPI[r.wrong_doc_type]=(wdtPI[r.wrong_doc_type]||0)+1;
+    else if(r.feature_type==='Expense')wdtExp[r.wrong_doc_type]=(wdtExp[r.wrong_doc_type]||0)+1;
+    else{wdtPI[r.wrong_doc_type]=(wdtPI[r.wrong_doc_type]||0)+1;}
+  });
+  const wdtPIArr=Object.entries(wdtPI).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const wdtExpArr=Object.entries(wdtExp).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxWdt=Math.max(...[...wdtPIArr,...wdtExpArr].map(x=>x[1]),1);
+
+  // overrides
+  const ovTypes={};O.forEach(r=>{ovTypes[r.override_type]=(ovTypes[r.override_type]||0)+1;});
+  const ovArr=Object.entries(ovTypes).sort((a,b)=>b[1]-a[1]);
+  const maxOv=ovArr[0]?.[1]||1;
+
+  // top sites — unified table
+  const siteStats={};
+  B.forEach(r=>{
+    const sid=r['Site ID'];
+    if(!siteStats[sid])siteStats[sid]={name:r['Business Name']||sid,jobs:0,cost:0,tokens:0,failed:0,pi:0,exp:0};
+    siteStats[sid].jobs++;siteStats[sid].cost+=r.Cost||0;siteStats[sid].tokens+=r.Tokens||0;
+    if(r.Status==='Failed')siteStats[sid].failed++;
+    r.Type==='Purchase Invoice'?siteStats[sid].pi++:siteStats[sid].exp++;
+  });
+  const topSites=Object.values(siteStats).sort((a,b)=>b.jobs-a.jobs).slice(0,10);
+
+  // RFR age buckets
+  const ageBuckets={'< 1 day':0,'1–3 days':0,'4–7 days':0,'> 7 days':0};
+  RFR.forEach(r=>{
+    const age=r.age_days||0;
+    if(age<1)ageBuckets['< 1 day']++;
+    else if(age<=3)ageBuckets['1–3 days']++;
+    else if(age<=7)ageBuckets['4–7 days']++;
+    else ageBuckets['> 7 days']++;
+  });
+
+  // new sites daily (for chart) filtered by env
+  // Compute new sites per day from filtered B (respects env/type/period filters)
+  const seenPiF=new Set(), seenExpF=new Set();
+  const newSitesByDate={};
+  const bSorted=[...B].sort((a,b)=>new Date(a['Created At'])-new Date(b['Created At']));
+  bSorted.forEach(r=>{
+    const sid=r['Site ID'], dt=r.date;
+    if(!dt)return;
+    if(!newSitesByDate[dt])newSitesByDate[dt]={pi:0,exp:0};
+    if(r.Type==='Purchase Invoice'&&!seenPiF.has(sid)){seenPiF.add(sid);newSitesByDate[dt].pi++;}
+    if(r.Type==='Expense'&&!seenExpF.has(sid)){seenExpF.add(sid);newSitesByDate[dt].exp++;}
+  });
+  const ndDates=Object.keys(newSitesByDate).sort();
+  const ndPI=ndDates.map(d=>newSitesByDate[d].pi);
+  const ndExp=ndDates.map(d=>newSitesByDate[d].exp);
+
+  // available dates for drill (from FIRST_TIMERS filtered by active env)
+  const ftDates=Object.keys(FIRST_TIMERS).sort().reverse();
+
+  // ── BUILD DOM ──────────────────────────────
+  document.getElementById('main').innerHTML=`
+    <div class="kpi-strip">
+      <div class="kpi" style="--kc:var(--accent)">
+        <div class="kpi-label">Unique Sites</div>
+        <div class="kpi-val">${uniqueSites.toLocaleString()}</div>
+        <div class="kpi-sub">
+          <span class="pill pill-web">Web ${webSites}</span>
+          <span class="pill pill-mob" style="margin-left:4px">Mobile ${mobileSites}</span>
+        </div>
+      </div>
+      <div class="kpi" style="--kc:var(--cyan)">
+        <div class="kpi-label">Batches</div>
+        <div class="kpi-val">${BAT.length?BAT.length.toLocaleString():'0'}</div>
+        <div class="kpi-sub"><b>PI</b> ${BAT.filter(r=>r.batch_type==='Purchase Invoice').length} · <b>Exp</b> ${BAT.filter(r=>r.batch_type==='Expense').length}</div>
+      </div>
+      <div class="kpi" style="--kc:var(--accent)">
+        <div class="kpi-label">Files Processed</div>
+        <div class="kpi-val">${total.toLocaleString()}</div>
+        <div class="kpi-sub">avg <b>${BAT.length?(total/BAT.length).toFixed(1):'—'}</b> files/batch</div>
+      </div>
+      <div class="kpi" style="--kc:var(--green)">
+        <div class="kpi-label">Completion Rate</div>
+        <div class="kpi-val">${compRate}%</div>
+        <div class="kpi-sub">${completed.toLocaleString()} completed</div>
+      </div>
+      <div class="kpi" style="--kc:var(--red)">
+        <div class="kpi-label">Failure Rate</div>
+        <div class="kpi-val">${failRate}%</div>
+        <div class="kpi-sub">${failed.toLocaleString()} failed</div>
+      </div>
+      <div class="kpi rfr-highlight" style="--kc:var(--yellow)">
+        <div class="kpi-label">Pending Review ⚠</div>
+        <div class="kpi-val">${rfr.toLocaleString()}</div>
+        <div class="kpi-sub">${(rfr/total*100).toFixed(1)}% of total · see age below</div>
+      </div>
+      <div class="kpi" style="--kc:var(--purple)">
+        <div class="kpi-label">AIC Coins Spent</div>
+        <div class="kpi-val">${totalCost.toLocaleString()}</div>
+        <div class="kpi-sub">avg <b>${avgCost}</b> / file</div>
+      </div>
+      <div class="kpi" style="--kc:var(--cyan)">
+        <div class="kpi-label">Total Tokens</div>
+        <div class="kpi-val">${(totalTokens/1000).toFixed(0)}K</div>
+        <div class="kpi-sub">avg <b>${(totalTokens/Math.max(B.filter(r=>r.Tokens).length,1)/1000).toFixed(1)}K</b> / file</div>
+      </div>
+    </div>
+
+    <!-- VOLUME + FUNNEL -->
+    
+
+    <div class="sdiv">Volume &amp; Health</div>
+    <div class="g7030">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Daily Job Volume</span><span class="info-btn">!<span class="tip">Number of files submitted for AI processing each day, split by feature type. Stacked bars show Purchase Invoice vs Expense volume.</span></span><span class="card-badge">${sortedDates.length} days</span></div>
+        <div class="chart-wrap" style="height:195px"><canvas id="cVolume"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Status Funnel</span><span class="info-btn">!<span class="tip">Distribution of all jobs by their current status. "Ready for Review" means AI finished but the user has not saved yet.</span></span><span class="card-badge">${total} total</span></div>
+        <div class="funnel" id="funnelWrap"></div>
+      </div>
+    </div>
+
+    <!-- PENDING REVIEW AGE -->
+    
+    <div class="card" style="margin-top:0">
+      <div class="card-hdr"><span class="card-title">New Sites Per Day</span><span class="info-btn">!<span class="tip">How many unique business accounts used each feature for the very first time on that day. Tracks feature adoption growth.</span></span><span class="card-badge" id="ftBadge"></span></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="cNewSites"></canvas></div>
+    </div>
+
+    <div class="sdiv">Cost &amp; Consumption</div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">AI Tokens Consumed Per Day</span><span class="info-btn">!<span class="tip">Total AI model tokens used daily (input + output). Higher token usage means more complex documents or more jobs processed.</span></span></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="cTokensDaily"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">AIC Coins Consumed Per Day</span><span class="info-btn">!<span class="tip">Total AIC coins charged to user accounts each day. AIC coins are the billing unit for AI processing on izam.co.</span></span></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="cAICDaily"></canvas></div>
+      </div>
+    </div>
+    <div class="g2" style="margin-top:14px">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Quick Mode vs Full Review</span><span class="info-btn">!<span class="tip">Quick Mode is a faster, cheaper processing path. Full Review extracts more detail but costs ~3× more. Shows avg AIC cost per job for each mode.</span></span></div>
+        <div class="mrow"><span class="mlabel" style="color:var(--green)">⚡ Quick Mode</span><div class="mbar-w"><div class="mbar" style="width:${Math.min(100,Math.round(parseFloat(qmTAvg)/Math.max(parseFloat(qmFAvg),.1)*100))}%;background:var(--green)"></div></div><span class="mval" style="color:var(--green)">${qmTAvg} AIC</span></div>
+        <div class="mrow"><span class="mlabel">Full Review</span><div class="mbar-w"><div class="mbar" style="width:100%;background:var(--accent)"></div></div><span class="mval">${qmFAvg} AIC</span></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <div class="qrow"><span class="qkey">Quick mode jobs</span><span class="qval">${qmT.length}</span></div>
+          <div class="qrow"><span class="qkey">Full review jobs</span><span class="qval">${qmF.length}</span></div>
+          <div class="qrow"><span class="qkey">Avg saving / job</span><span class="qval" style="color:var(--green)">-${(parseFloat(qmFAvg)-parseFloat(qmTAvg)).toFixed(1)} AIC</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Feature Split</span><span class="info-btn">!<span class="tip">Breakdown of total jobs and AIC spend between Purchase Invoice and Expense features.</span></span></div>
+        <div class="chart-wrap" style="height:140px"><canvas id="cFeature"></canvas></div>
+        <div style="margin-top:12px">
+          <div class="qrow"><span class="qkey" style="color:var(--pi)">● Purchase Invoice</span><span class="qval">${piRows.length} files · ${piRows.reduce((s,r)=>s+(r.Cost||0),0).toLocaleString()} AIC</span></div>
+          <div class="qrow"><span class="qkey" style="color:var(--exp)">● Expense</span><span class="qval">${expRows.length} files · ${expRows.reduce((s,r)=>s+(r.Cost||0),0).toLocaleString()} AIC</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sdiv">Failure Analysis</div>
+    <div class="g3">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Failure Categories</span><span class="info-btn">!<span class="tip">All AI processing failures grouped by root cause. Sourced from the action log errors field — more accurate than the batch file alone.</span></span><span class="card-badge">${E.length} events</span></div>
+        <div id="errWrap"></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Wrong Documents Uploaded</span><span class="info-btn">!<span class="tip">When a job fails because the user uploaded the wrong document type, this shows what they actually uploaded instead. Split by feature to identify education gaps.</span></span><span class="card-badge">by feature</span></div>
+        <div class="wdt-cols">
+          <div>
+            <div class="wdt-col-title" style="color:var(--pi)">Purchase Invoice</div>
+            <div id="wdtPI"></div>
+          </div>
+          <div>
+            <div class="wdt-col-title" style="color:var(--exp)">Expense</div>
+            <div id="wdtExp"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">File Type Performance</span><span class="info-btn">!<span class="tip">Failure rate per file format. High failure on .xlsx means the AI struggles with spreadsheets — useful for setting user expectations.</span></span></div>
+        <div class="ft-tiles" id="ftTiles"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Daily Failures &amp; Cost</span><span class="info-btn">!<span class="tip">Dual-axis chart: AIC coins spent (bars) vs number of failed jobs (line) per day. Helps correlate cost spikes with failure spikes.</span></span></div>
+        <div class="chart-wrap" style="height:160px"><canvas id="cCost"></canvas></div>
+      </div>
+    </div>
+
+<div class="sdiv">Pending Review — Age Analysis</div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">How long have jobs been waiting?</span><span class="info-btn">!<span class="tip">Jobs stuck in "Ready for Review" broken down by how long they've been waiting. Old pending jobs may indicate users who uploaded and never came back.</span></span>
+        <span class="card-badge">${RFR.length} jobs pending</span>
+      </div>
+      <div class="age-strip" id="ageStrip"></div>
+      <div class="chart-wrap" style="height:140px"><canvas id="cRFR"></canvas></div>
+    </div>
+
+    <!-- COST & EFFICIENCY -->
+    
+
+    <div class="sdiv">Engagement &amp; Usage</div>
+    <div class="g6040">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Top Sites</span><span class="info-btn">!<span class="tip">Most active business accounts ranked by files processed. Includes AIC spend, token usage, and failure rate per site.</span></span><span class="card-badge">by jobs · top 10</span></div>
+        <div class="scroll-t">
+          <table class="tbl">
+            <thead><tr><th>#</th><th>Business</th><th>Jobs</th><th>AIC</th><th>Tokens</th><th>Fail%</th><th>Avg AIC</th></tr></thead>
+            <tbody id="topTb"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">AI Override Events</span><span class="info-btn">!<span class="tip">During the review step, users can accept or correct the AI's suggestions. Each correction is an override event. High overrides = AI accuracy needs improvement.</span></span><span class="card-badge">${O.length} total</span></div>
+        <div id="ovWrap"></div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:9px;color:var(--muted);font-family:var(--mono)">User corrections to AI suggestions during review</div>
+      </div>
+    </div>
+
+
+    <!-- RETENTION -->
+    <div class="sdiv">Site Retention</div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Stickiness — Days Used</span><span class="info-btn">!<span class="tip">How many unique days each site used the feature. "1 day" = tried once and didn't return. Tracked separately for PI and Expense.</span></span>
+          <span class="card-badge" id="stickyBadge"></span>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="cSticky"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Daily Return Rate</span><span class="info-btn">!<span class="tip">Of all sites active on a given day, what % had used the feature on a previous day. Rising trend = feature is becoming habitual.</span></span>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="cReturnRate"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-hdr">
+        <span class="card-title">Weekly Cohort Retention</span><span class="info-btn">!<span class="tip">Sites grouped by the day they first used the feature. Each column shows what % of that cohort returned on Day 1, Day 2, etc. Newer cohorts show N/A for future days.</span></span>
+        <span class="card-badge" id="cohortNote"></span>
+      </div>
+      <div id="cohortGrid" style="overflow-x:auto"></div>
+    </div>
+
+    <!-- TOKEN RISK TABLE -->
+    <div class="sdiv">Token Consumption Risk</div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Sites: Tokens vs AIC Charged</span><span class="info-btn">!<span class="tip">Expected AIC = ceil(tokens ÷ 1000) per job — the platform rounds up to the next 1,000. All processed jobs (tokens not null) are included. Null AIC = 0 (tokens consumed, nothing charged). Red = undercharged. Total gap shown in badge.</span></span>
+        <span class="card-badge" id="riskBadge"></span>
+      </div>
+      <div id="riskTableWrap"></div>
+    </div>
+  `
+
+  // ── FUNNEL ──
+  const fw=document.getElementById('funnelWrap');
+  statusOrder.forEach(st=>{
+    const n=statusCounts[st]||0;if(!n)return;
+    const pct=(n/total*100).toFixed(1);const color=statusColors[st]||'#566480';
+    const el=document.createElement('div');el.className='frow';
+    el.innerHTML=`<span class="fname" style="color:${color}">${st}</span>
+      <div class="fbar-outer"><div class="fbar-inner" style="width:${pct}%;background:${color}22;color:${color};border-left:2px solid ${color}"></div></div>
+      <span class="fpct" style="color:${color}">${pct}%</span><span class="fn">${n}</span>`;
+    fw.appendChild(el);
+  });
+
+  // ── RFR AGE ──
+  const ageColors={'< 1 day':'var(--green)','1–3 days':'var(--yellow)','4–7 days':'var(--orange)','> 7 days':'var(--red)'};
+  const ageStrip=document.getElementById('ageStrip');
+  Object.entries(ageBuckets).forEach(([label,n])=>{
+    const color=ageColors[label];
+    const el=document.createElement('div');el.className='age-bucket';
+    el.innerHTML=`<div class="age-val" style="color:${color}">${n}</div><div class="age-label">${label}</div>`;
+    ageStrip.appendChild(el);
+  });
+
+  // ── FILE TYPES ──
+  const ftTiles=document.getElementById('ftTiles');
+  ['pdf','jpg','png','xlsx','csv'].forEach(ext=>{
+    const st=ftStats[ext];if(!st)return;
+    const rate=(st.failed/st.total*100).toFixed(0);
+    const color=parseInt(rate)>=50?'var(--red)':parseInt(rate)>=30?'var(--yellow)':'var(--green)';
+    const el=document.createElement('div');el.className='ft-tile';
+    el.innerHTML=`<div class="ft-ext" style="color:${color}">.${ext}</div><div class="ft-rate" style="color:${color}">${rate}%</div><div class="ft-lbl">fail rate</div><div class="ft-vol">${st.total} jobs</div>`;
+    ftTiles.appendChild(el);
+  });
+
+  // ── ERROR CATEGORIES ──
+  const errColors={'Rate Limit':'var(--orange)','Wrong Doc Type':'var(--yellow)','Context Window':'var(--purple)','Too Many Invoices in File':'var(--red)','Too Many Expenses in File':'var(--red)','Insufficient Coins':'var(--red)','Code Error':'var(--muted)','Unreadable Document':'var(--muted2)','Other':'var(--muted)'};
+  const errWrap=document.getElementById('errWrap');
+  errArr.forEach(([cat,n])=>{
+    const color=errColors[cat]||'var(--muted)';
+    const el=document.createElement('div');el.className='hbrow';
+    el.innerHTML=`<span class="hblabel" style="color:${color}">${cat}</span>
+      <div class="hbbar-w"><div class="hbbar" style="width:${Math.round(n/maxErr*100)}%;background:${color}"></div></div>
+      <span class="hbcnt">${n}</span>`;
+    errWrap.appendChild(el);
+  });
+
+  // ── WRONG DOC TYPES ──
+  function renderWDT(arr,containerId,color){
+    const wrap=document.getElementById(containerId);
+    if(!arr.length){wrap.innerHTML='<div style="font-size:10px;color:var(--muted);padding:4px 0;font-family:var(--mono)">No data</div>';return;}
+    arr.forEach(([name,n])=>{
+      const el=document.createElement('div');el.className='hbrow';
+      el.innerHTML=`<span class="hblabel" style="font-size:10px;text-transform:capitalize">${name}</span>
+        <div class="hbbar-w"><div class="hbbar" style="width:${Math.round(n/maxWdt*100)}%;background:${color}"></div></div>
+        <span class="hbcnt">${n}</span>`;
+      wrap.appendChild(el);
+    });
+  }
+  renderWDT(wdtPIArr,'wdtPI','var(--pi)');
+  renderWDT(wdtExpArr,'wdtExp','var(--exp)');
+
+  // ── OVERRIDES ──
+  const ovColors={'Product Override':'var(--accent)','Supplier Override':'var(--cyan)','Tax Override':'var(--yellow)','Price Override':'var(--orange)','Quantity Override':'var(--purple)','Product Deleted':'var(--red)','Product Added':'var(--green)','Unit Factor Override':'var(--muted2)'};
+  const ovWrap=document.getElementById('ovWrap');
+  ovArr.forEach(([type,n])=>{
+    const color=ovColors[type]||'var(--purple)';
+    const el=document.createElement('div');el.className='hbrow';
+    el.innerHTML=`<span class="hblabel">${type}</span>
+      <div class="hbbar-w"><div class="hbbar" style="width:${Math.round(n/maxOv*100)}%;background:${color}"></div></div>
+      <span class="hbcnt">${n}</span>`;
+    ovWrap.appendChild(el);
+  });
+
+  // ── TOP SITES TABLE ──
+  const topTb=document.getElementById('topTb');
+  topSites.forEach((s,i)=>{
+    const fp=s.jobs?(s.failed/s.jobs*100).toFixed(0):0;
+    const fc=parseInt(fp)>40?'var(--red)':parseInt(fp)>20?'var(--yellow)':'var(--green)';
+    const avgA=s.jobs?(s.cost/s.jobs).toFixed(1):0;
+    topTb.innerHTML+=`<tr>
+      <td class="rank">${i+1}</td>
+      <td><div class="sname" title="${s.name}">${s.name}</div>
+          <div style="margin-top:2px">${s.pi?`<span class="pill pill-pi">PI×${s.pi}</span>`:''} ${s.exp?`<span class="pill pill-exp">Exp×${s.exp}</span>`:''}</div></td>
+      <td class="mono">${s.jobs}</td>
+      <td class="mono" style="color:var(--purple)">${s.cost.toLocaleString()}</td>
+      <td class="mono" style="color:var(--cyan)">${(s.tokens/1000).toFixed(0)}K</td>
+      <td class="mono" style="color:${fc}">${fp}%</td>
+      <td class="mono" style="color:var(--muted2)">${avgA}</td>
+    </tr>`;
+  });
+
+  // ── NEW SITES BADGE (uses filtered counts) ──
+  document.getElementById('ftBadge').textContent=`${seenPiF.size} PI · ${seenExpF.size} Exp sites`;
+
+  // ══ CHARTS ══════════════════════════════════
+  mkChart('cVolume',{type:'bar',data:{
+    labels:sortedDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'Purchase Invoice',data:sortedDates.map(d=>byDate[d].pi),backgroundColor:'rgba(79,142,247,.75)',stack:'a'},
+      {label:'Expense',data:sortedDates.map(d=>byDate[d].exp),backgroundColor:'rgba(34,211,238,.75)',stack:'a'},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#566480',font:{family:'JetBrains Mono',size:9},boxWidth:10}}},scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:tk()}}}});
+
+  mkChart('cFeature',{type:'doughnut',data:{
+    labels:['Purchase Invoice','Expense'],
+    datasets:[{data:[piRows.length,expRows.length],backgroundColor:['rgba(79,142,247,.8)','rgba(34,211,238,.8)'],borderWidth:0,hoverOffset:4}]
+  },options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:true,position:'bottom',labels:{color:'#7a8db0',font:{family:'JetBrains Mono',size:9},boxWidth:10,padding:10}}}}});
+
+  mkChart('cCost',{type:'line',data:{
+    labels:sortedDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'AIC Spent',data:sortedDates.map(d=>byDate[d].cost),borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.08)',fill:true,tension:.3,pointRadius:2,yAxisID:'y'},
+      {label:'Failed',data:sortedDates.map(d=>byDate[d].failed),borderColor:'#f43f5e',fill:false,tension:.3,pointRadius:2,borderDash:[4,2],yAxisID:'y1'},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#566480',font:{family:'JetBrains Mono',size:9},boxWidth:10}}},scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:tk(),position:'left'},y1:{grid:{display:false},ticks:{...tk(),color:'#f43f5e'},position:'right'}}}});
+
+  // RFR age bar chart
+  const rfrByDate={};
+  RFR.forEach(r=>{if(r.date)rfrByDate[r.date]=(rfrByDate[r.date]||0)+1;});
+  const rfrDates=Object.keys(rfrByDate).sort();
+  mkChart('cRFR',{type:'bar',data:{
+    labels:rfrDates.map(d=>d.slice(5)),
+    datasets:[{label:'Jobs created (now pending)',data:rfrDates.map(d=>rfrByDate[d]),backgroundColor:'rgba(245,158,11,.6)',borderRadius:2}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>rfrDates[i[0].dataIndex]+' (still pending)'}}},scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:tk()}}}});
+
+  // New sites chart
+  mkChart('cNewSites',{type:'bar',data:{
+    labels:ndDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'New PI Sites',data:ndPI,backgroundColor:'rgba(79,142,247,.7)',stack:'a'},
+      {label:'New Expense Sites',data:ndExp,backgroundColor:'rgba(34,211,238,.7)',stack:'a'},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#566480',font:{family:'JetBrains Mono',size:9},boxWidth:10}}},scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:tk()}}}});
+
+  const tokByDate={};
+  B.filter(r=>r.Tokens).forEach(r=>{
+    if(!r.date)return;
+    if(!tokByDate[r.date])tokByDate[r.date]={pi:0,exp:0};
+    r.Type==='Purchase Invoice'?tokByDate[r.date].pi+=r.Tokens:tokByDate[r.date].exp+=r.Tokens;
+  });
+  const tokDates=Object.keys(tokByDate).sort();
+  mkChart('cTokensDaily',{type:'bar',data:{
+    labels:tokDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'Purchase Invoice',data:tokDates.map(d=>Math.round(tokByDate[d].pi/1000)),backgroundColor:'rgba(79,142,247,.7)',stack:'a'},
+      {label:'Expense',data:tokDates.map(d=>Math.round(tokByDate[d].exp/1000)),backgroundColor:'rgba(34,211,238,.7)',stack:'a'},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#566480',font:{family:'JetBrains Mono',size:9},boxWidth:10}},
+      tooltip:{callbacks:{label:i=>i.dataset.label+': '+i.raw+'K tokens'}}},
+    scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:{...tk(),callback:v=>v+'K'}}}}});
+
+  const aicByDate={};
+  B.filter(r=>r.Cost).forEach(r=>{
+    if(!r.date)return;
+    if(!aicByDate[r.date])aicByDate[r.date]={pi:0,exp:0};
+    r.Type==='Purchase Invoice'?aicByDate[r.date].pi+=r.Cost:aicByDate[r.date].exp+=r.Cost;
+  });
+  const aicDates=Object.keys(aicByDate).sort();
+  mkChart('cAICDaily',{type:'bar',data:{
+    labels:aicDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'Purchase Invoice',data:aicDates.map(d=>Math.round(aicByDate[d].pi)),backgroundColor:'rgba(167,139,250,.7)',stack:'a'},
+      {label:'Expense',data:aicDates.map(d=>Math.round(aicByDate[d].exp)),backgroundColor:'rgba(251,146,60,.6)',stack:'a'},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#566480',font:{family:'JetBrains Mono',size:9},boxWidth:10}}},
+    scales:{x:{grid:{color:gc()},ticks:{...tk(),maxRotation:45}},y:{grid:{color:gc()},ticks:tk()}}}});
+
+  // ── RETENTION ──
+  renderRetention();
+  renderRiskTable(0);
+}
+
+// ── RISK TABLE ────────────────────────────────────────────────
+let riskAllRows = [];
+let riskShowing = 0;
+const RISK_PAGE = 15;
+
+function buildRiskRows() {
+  // Raw sums per site — no filtering, no exclusions
+  // total_tokens and total_aic are direct sums from the data
+  // expected_aic = ceil(total_tokens / 1000) — only calculation is for comparison
+  const siteMap = {};
+
+  B.forEach(r => {
+    const sid = String(r['Site ID']);
+    if (!siteMap[sid]) siteMap[sid] = { name: r['Business Name'] || sid, total_tokens: 0, total_aic: 0, jobs: 0, pi: 0, exp: 0 };
+    siteMap[sid].total_tokens += r.Tokens || 0;
+    siteMap[sid].total_aic    += r.Cost   || 0;
+    siteMap[sid].jobs++;
+    r.Type === 'Purchase Invoice' ? siteMap[sid].pi++ : siteMap[sid].exp++;
+  });
+
+  const rows = Object.entries(siteMap)
+    .map(([sid, s]) => {
+      const expected_aic = s.total_tokens > 0 ? Math.ceil(s.total_tokens / 1000) : 0;
+      const gap          = expected_aic - s.total_aic;
+      return { sid, ...s, expected_aic, gap };
+    });
+
+  const under    = rows.filter(r => r.gap > 0).sort((a,b) => b.gap - a.gap);
+  const balanced = rows.filter(r => r.gap <= 0).sort((a,b) => a.gap - b.gap);
+  return [...under, ...balanced];
+}
+
+function renderRiskTable(from) {
+  riskAllRows = buildRiskRows();
+  riskShowing = Math.min(from + RISK_PAGE, Math.min(riskAllRows.length, 100));
+
+  const wrap = document.getElementById('riskTableWrap');
+  if (!wrap) return;
+
+  const badge = document.getElementById('riskBadge');
+  const underCount = riskAllRows.filter(r=>r.gap>0).length;
+  const totalGap = riskAllRows.filter(r=>r.gap>0).reduce((s,r)=>s+r.gap,0).toFixed(1);
+  if (badge) badge.textContent = `${underCount} undercharged · total gap ${totalGap} AIC`;
+
+  const thS = `padding:6px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;font-weight:500;text-align:`;
+
+  let t = `<div style="overflow-x:auto"><table class="tbl" style="width:100%"><thead><tr>
+    <th style="${thS}left">#</th>
+    <th style="${thS}left">Site ID</th>
+    <th style="${thS}left">Business</th>
+    <th style="${thS}right">Jobs</th>
+    <th style="${thS}right">Tokens</th>
+    <th style="${thS}right">Expected AIC<br><span style="font-weight:400;color:var(--muted)">(ceil tok÷1000)</span></th>
+    <th style="${thS}right">Charged AIC</th>
+    <th style="${thS}right">Gap</th>
+    <th style="${thS}center">Status</th>
+  </tr></thead><tbody>`;
+
+  const slice = riskAllRows.slice(0, riskShowing);
+  slice.forEach((r, i) => {
+    const isRed = r.gap > 0;
+    const rowClass = isRed ? 'risk-row-red' : 'risk-row-green';
+    const badgeHtml = isRed
+      ? `<span class="risk-badge risk-red">⚠ Undercharged</span>`
+      : `<span class="risk-badge risk-green">✓ Balanced</span>`;
+    const gapColor = isRed ? 'var(--red)' : 'var(--green)';
+
+    t += `<tr class="${rowClass}">
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--muted)">${i+1}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted2)">${r.sid}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border)">
+        <div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${r.name}">${r.name}</div>
+        <div style="margin-top:2px">${r.pi?`<span class="pill pill-pi">PI×${r.pi}</span>`:''} ${r.exp?`<span class="pill pill-exp">Exp×${r.exp}</span>`:''}</div>
+      </td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:11px">${r.jobs}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:11px;color:var(--cyan)">${r.total_tokens.toLocaleString()}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:11px;color:var(--muted2)">${r.expected_aic.toLocaleString()}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:11px;color:var(--purple)">${r.total_aic.toLocaleString()}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--mono);font-size:11px;color:${gapColor};font-weight:600">${r.gap>0?"+":""}${r.gap.toLocaleString()}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center">${badgeHtml}</td>
+    </tr>`;
+  });
+
+  t += `</tbody></table></div>`;
+
+  // View more / view less button
+  const totalCapped = Math.min(riskAllRows.length, 100);
+  if (riskShowing < totalCapped) {
+    t += `<button class="view-more-btn" onclick="renderRiskTable(${riskShowing})">
+      Load next ${Math.min(RISK_PAGE, totalCapped - riskShowing)} of ${totalCapped - riskShowing} remaining
+    </button>`;
+  } else if (riskShowing >= RISK_PAGE) {
+    t += `<div style="margin-top:8px;text-align:center;font-size:9px;color:var(--muted);font-family:var(--mono)">showing ${riskShowing} of ${riskAllRows.length} sites${riskAllRows.length>100?' (capped at 100)':''}</div>`;
+  }
+
+  wrap.innerHTML = t;
+}
+
+// ── RETENTION RENDERING (fully client-side from B) ──────────
+function computeRetention() {
+  // Uses filtered B array — always in sync with env/type/period filters
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // first day per site
+  const firstDayPi = {}, firstDayExp = {}, firstDayAll = {};
+  const siteDaysPi = {}, siteDaysExp = {}, siteDaysAll = {};
+
+  const bSorted = [...B].sort((a,b) => new Date(a['Created At']) - new Date(b['Created At']));
+  bSorted.forEach(r => {
+    const sid = String(r['Site ID']), dt = r.date;
+    if (!dt) return;
+    // all
+    if (!firstDayAll[sid]) firstDayAll[sid] = dt;
+    if (!siteDaysAll[sid]) siteDaysAll[sid] = new Set();
+    siteDaysAll[sid].add(dt);
+    // by type
+    if (r.Type === 'Purchase Invoice') {
+      if (!firstDayPi[sid]) firstDayPi[sid] = dt;
+      if (!siteDaysPi[sid]) siteDaysPi[sid] = new Set();
+      siteDaysPi[sid].add(dt);
+    } else {
+      if (!firstDayExp[sid]) firstDayExp[sid] = dt;
+      if (!siteDaysExp[sid]) siteDaysExp[sid] = new Set();
+      siteDaysExp[sid].add(dt);
+    }
+  });
+
+  // all unique dates in B
+  const allDates = [...new Set(B.map(r=>r.date).filter(Boolean))].sort();
+
+  // STICKINESS
+  function bucketDays(firstDayMap, siteDaysMap) {
+    const b = {'1':0,'2-3':0,'4-7':0,'8+':0};
+    Object.keys(firstDayMap).forEach(sid => {
+      const n = siteDaysMap[sid] ? siteDaysMap[sid].size : 1;
+      if (n===1) b['1']++;
+      else if (n<=3) b['2-3']++;
+      else if (n<=7) b['4-7']++;
+      else b['8+']++;
+    });
+    return b;
+  }
+  const stick = {
+    all: bucketDays(firstDayAll, siteDaysAll),
+    pi:  bucketDays(firstDayPi,  siteDaysPi),
+    exp: bucketDays(firstDayExp, siteDaysExp),
+  };
+
+  // DAILY RETURN RATE
+  const seenAll=new Set(), seenPi=new Set(), seenExp=new Set();
+  const dailyReturn = [];
+  allDates.forEach(dt => {
+    const dayRows = B.filter(r=>r.date===dt);
+    const sAll = new Set(dayRows.map(r=>String(r['Site ID'])));
+    const sPi  = new Set(dayRows.filter(r=>r.Type==='Purchase Invoice').map(r=>String(r['Site ID'])));
+    const sExp = new Set(dayRows.filter(r=>r.Type==='Expense').map(r=>String(r['Site ID'])));
+    const ra = [...sAll].filter(s=>seenAll.has(s)).length;
+    const rp = [...sPi].filter(s=>seenPi.has(s)).length;
+    const re = [...sExp].filter(s=>seenExp.has(s)).length;
+    dailyReturn.push({
+      date: dt,
+      total: sAll.size,
+      ret_pct_all: sAll.size ? +(ra/sAll.size*100).toFixed(1) : 0,
+      ret_pct_pi:  sPi.size  ? +(rp/sPi.size*100).toFixed(1)  : 0,
+      ret_pct_exp: sExp.size ? +(re/sExp.size*100).toFixed(1)  : 0,
+    });
+    sAll.forEach(s=>seenAll.add(s));
+    sPi.forEach(s=>seenPi.add(s));
+    sExp.forEach(s=>seenExp.add(s));
+  });
+
+  // COHORT TABLE (daily)
+  const cohortDays = [...new Set(Object.values(firstDayAll))].sort();
+  const cohortRows = cohortDays.map(cd => {
+    const sites = Object.keys(firstDayAll).filter(s=>firstDayAll[s]===cd);
+    const n = sites.length;
+    const cdIdx = allDates.indexOf(cd);
+    const retention = allDates.map((ad, colIdx) => {
+      const offset = colIdx - cdIdx;
+      if (offset < 0) return null;
+      if (offset === 0) return 100.0;
+      const adDate = new Date(ad+'T00:00:00');
+      if (adDate >= today) return null;
+      const active = sites.filter(s => siteDaysAll[s] && siteDaysAll[s].has(ad)).length;
+      return +(active/n*100).toFixed(1);
+    });
+    return {day: cd, n, retention};
+  });
+
+  // avg per column
+  const avg = allDates.map((_, colIdx) => {
+    const vals = cohortRows
+      .filter(r => {
+        const joinIdx = allDates.indexOf(r.day);
+        return colIdx > joinIdx && r.retention[colIdx] !== null;
+      })
+      .map(r => r.retention[colIdx]);
+    return vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
+  });
+
+  return { stick, dailyReturn, cohortTable: { days: allDates, rows: cohortRows, avg } };
+}
+
+function renderRetention() {
+  const rd = computeRetention();
+
+  // ── STICKINESS CHART ──
+  const stick = rd.stick;
+  const stickLabels = ['1 day','2-3 days','4-7 days','8+ days'];
+  const stickKeys   = ['1','2-3','4-7','8+'];
+
+  mkChart('cSticky', {
+    type: 'bar',
+    data: {
+      labels: stickLabels,
+      datasets: [
+        { label: 'All',              data: stickKeys.map(k=>stick.all[k]),  backgroundColor: 'rgba(79,142,247,.5)',  borderColor: 'rgba(79,142,247,.9)',  borderWidth:1 },
+        { label: 'Purchase Invoice', data: stickKeys.map(k=>stick.pi[k]),   backgroundColor: 'rgba(79,142,247,.85)', borderColor: 'rgba(79,142,247,1)',   borderWidth:1 },
+        { label: 'Expense',          data: stickKeys.map(k=>stick.exp[k]),  backgroundColor: 'rgba(34,211,238,.75)', borderColor: 'rgba(34,211,238,1)',   borderWidth:1 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:true, labels:{ color:'#566480', font:{family:'JetBrains Mono',size:9}, boxWidth:10 }}},
+      scales: {
+        x: { grid:{color:gc()}, ticks:tk() },
+        y: { grid:{color:gc()}, ticks:tk() }
+      }
+    }
+  });
+
+  // Badge: % one-timers
+  const total = Object.values(stick.all).reduce((a,b)=>a+b,0);
+  const pct = total ? Math.round(stick.all['1']/total*100) : 0;
+  const badge = document.getElementById('stickyBadge');
+  if (badge) badge.textContent = `${pct}% one-timers`;
+
+  // ── DAILY RETURN RATE ──
+  const dr = rd.dailyReturn;
+  mkChart('cReturnRate', {
+    type: 'line',
+    data: {
+      labels: dr.map(d=>d.date.slice(5)),
+      datasets: [
+        { label: 'All',   data: dr.map(d=>d.ret_pct_all), borderColor:'rgba(79,142,247,.9)',  backgroundColor:'rgba(79,142,247,.08)', fill:true,  tension:.3, pointRadius:3 },
+        { label: 'PI',    data: dr.map(d=>d.ret_pct_pi),  borderColor:'rgba(79,142,247,.5)',  backgroundColor:'transparent',         fill:false, tension:.3, pointRadius:2, borderDash:[3,2] },
+        { label: 'Exp',   data: dr.map(d=>d.ret_pct_exp), borderColor:'rgba(34,211,238,.8)',  backgroundColor:'transparent',         fill:false, tension:.3, pointRadius:2, borderDash:[3,2] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display:true, labels:{ color:'#566480', font:{family:'JetBrains Mono',size:9}, boxWidth:10 }}},
+      scales: {
+        x: { grid:{color:gc()}, ticks:{...tk(), maxRotation:45} },
+        y: { grid:{color:gc()}, ticks:{...tk(), callback:v=>v+'%'}, min:0, max:100 }
+      }
+    }
+  });
+
+  // ── COHORT GRID ──
+  const ct = rd.cohortTable;
+  const note = document.getElementById('cohortNote');
+  const grid = document.getElementById('cohortGrid');
+  if (!grid) return;
+
+  const allWeeks = ct.days;
+  const rows = ct.rows;
+  const avg = ct.avg;
+
+  if (!rows || rows.length < 2) {
+    grid.innerHTML = '<div style="padding:20px 0;font-size:11px;color:var(--muted);font-family:var(--mono)">Not enough data for cohort view with current filters.</div>';
+    if (note) note.textContent = 'insufficient data';
+    return;
+  }
+
+  if (note) note.textContent = `${rows.length} cohort days · ${allWeeks.length} days`;
+
+  const cellBg = (pct) => {
+    if (pct === null || pct === undefined) return '';
+    const i = pct / 100;
+    return isDark ? `rgba(79,142,247,${0.05+i*0.75})` : `rgba(37,99,235,${0.04+i*0.6})`;
+  };
+  const cellColor = (pct) => {
+    if (pct === null) return 'var(--muted)';
+    return pct > 50 ? (isDark?'#dce6f5':'#1a2033') : (isDark?'#7a8db0':'#5a6680');
+  };
+
+  const th = `padding:6px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;text-align:center;white-space:nowrap;font-family:var(--mono);font-size:9px`;
+  const thL = `padding:6px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:500;text-align:left;white-space:nowrap;font-family:var(--mono);font-size:9px`;
+
+  let t = `<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr>
+    <th style="${thL}">Cohort (first use)</th>
+    <th style="${th}">Sites</th>`;
+  allWeeks.forEach((_,i) => { t += `<th style="${th}">Day ${i}</th>`; });
+  t += `</tr></thead><tbody>`;
+
+  // Avg row
+  t += `<tr style="font-weight:600">
+    <td style="padding:6px 10px;border-bottom:2px solid var(--border2);font-family:var(--mono);font-size:9px;color:var(--text)">Avg Retention</td>
+    <td style="padding:6px 10px;border-bottom:2px solid var(--border2);text-align:center;color:var(--muted);font-family:var(--mono)">—</td>
+    <td style="padding:6px 10px;border-bottom:2px solid var(--border2);text-align:center;font-family:var(--mono);font-weight:700;color:var(--text)">100%</td>`;
+  allWeeks.slice(1).forEach((_,i) => {
+    const pct = avg[i+1];
+    t += `<td style="padding:6px 10px;border-bottom:2px solid var(--border2);text-align:center;font-family:var(--mono);font-weight:700;background:${cellBg(pct)};color:${cellColor(pct)}">${pct!==null?pct+'%':'—'}</td>`;
+  });
+  t += `</tr>`;
+
+  rows.forEach(row => {
+    const fmt = d => { const dd=new Date(d+'T00:00:00'); return (dd.getMonth()+1)+'/'+(dd.getDate()); };
+    t += `<tr>
+      <td style="padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:var(--mono);font-size:9px">
+        ${fmt(row.day)}<br><span style="color:var(--muted);font-size:8px">${row.n} sites</span></td>
+      <td style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted2);font-family:var(--mono)">${row.n}</td>`;
+    const joinIdx = row.retention.findIndex(v=>v===100.0);
+    row.retention.forEach((pct, colIdx) => {
+      if (pct===null && colIdx<joinIdx) {
+        t += `<td style="padding:6px 10px;border-bottom:1px solid var(--border)"></td>`;
+      } else if (pct===null) {
+        t += `<td style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted);font-family:var(--mono)">N/A</td>`;
+      } else if (pct===100.0) {
+        t += `<td style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--s3)">100%</td>`;
+      } else {
+        t += `<td style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:center;font-family:var(--mono);background:${cellBg(pct)};color:${cellColor(pct)}">${pct}%</td>`;
+      }
+    });
+    t += `</tr>`;
+  });
+
+  t += `</tbody></table>`;
+  grid.innerHTML = t;
+}
+// ── LOAD DATA FROM SERVER ──────────────────────────────────
+async function loadData() {
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) throw new Error('No data uploaded yet');
+    const d = await res.json();
+    BATCH_RAW     = d.batch     || [];
+    ERRORS_RAW    = d.errors    || [];
+    OVERRIDES_RAW = d.overrides || [];
+    BATCHES_RAW   = d.batches   || [];
+    FIRST_TIMERS  = d.firstTimers || {};
+    RFR_RAW       = d.rfr       || [];
+    RETENTION     = d.retention  || {};
+    updateRange();
+    applyFilters();
+  } catch(err) {
+    document.getElementById('main').innerHTML =
+      '<div class="empty">📂 No data yet — upload your CSV files using the buttons above.</div>';
+  }
+}
+loadData();
+
+// ── THEME ──────────────────────────────────────────────────────
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('themeIcon').textContent = isDark ? '☀' : '🌙';
+  document.getElementById('themeLabel').textContent = isDark ? 'Light' : 'Dark';
+  // Re-render charts with new colors
+  applyFilters();
+}
+
+// Make chart colors theme-aware
+const origMkChart = mkChart;
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "izam-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/blob": "^0.23.0"
+  }
+}
