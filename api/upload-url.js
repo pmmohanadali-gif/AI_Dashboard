@@ -1,28 +1,21 @@
-import { handleUpload } from '@vercel/blob/client';
-
 export default async function handler(req, res) {
-  const body = await new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', chunk => data += chunk);
-    req.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) return res.status(500).json({ error: 'BLOB_READ_WRITE_TOKEN not set' });
+
+  let body = '';
+  await new Promise((resolve, reject) => {
+    req.on('data', c => body += c);
+    req.on('end', resolve);
     req.on('error', reject);
   });
 
-  try {
-    const jsonResponse = await handleUpload({
-      body,
-      request: req,
-      onBeforeGenerateToken: async (pathname) => ({
-        allowedContentTypes: ['text/csv', 'application/octet-stream', 'text/plain'],
-        tokenPayload: JSON.stringify({ pathname }),
-      }),
-      onUploadCompleted: async ({ blob }) => {
-        // Trigger processing after upload completes
-        console.log('Upload completed:', blob.pathname, blob.url);
-      },
-    });
-    return res.status(200).json(jsonResponse);
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
+  const { filename } = JSON.parse(body || '{}');
+  if (!filename) return res.status(400).json({ error: 'Missing filename' });
+
+  res.status(200).json({
+    uploadUrl: `https://blob.vercel-storage.com/${encodeURIComponent(filename)}`,
+    token,
+  });
 }
