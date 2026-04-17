@@ -324,10 +324,17 @@ function parseCSV(text){
 document.getElementById('csvBatch').addEventListener('change',async function(e){
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblBatch').textContent='Uploading…';
-  const form=new FormData();form.append('file',file);form.append('type','batch');
   try{
-    const res=await fetch('/api/upload',{method:'POST',body:form});
-    if(!res.ok)throw new Error(await res.text());
+    // Step 1: get upload URL + token from server
+    const tokenRes=await fetch('/api/upload-url',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({filename:'latest-batch.csv'})});
+    if(!tokenRes.ok)throw new Error(await tokenRes.text());
+    const {uploadUrl,token}=await tokenRes.json();
+    // Step 2: PUT file directly to Vercel Blob (no size limit)
+    const uploadRes=await fetch(uploadUrl,{method:'PUT',headers:{'authorization':`Bearer ${token}`,'content-type':'text/csv','x-add-random-suffix':'0','x-cache-control-max-age':'0'},body:file});
+    if(!uploadRes.ok)throw new Error('Blob upload failed: '+(await uploadRes.text()));
+    // Step 3: trigger server-side processing
+    const procRes=await fetch('/api/process',{method:'POST'});
+    if(!procRes.ok)throw new Error(await procRes.text());
     document.getElementById('lblBatch').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){
@@ -338,10 +345,17 @@ document.getElementById('csvBatch').addEventListener('change',async function(e){
 document.getElementById('csvAction').addEventListener('change',async function(e){
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblAction').textContent='Uploading…';
-  const form=new FormData();form.append('file',file);form.append('type','action');
   try{
-    const res=await fetch('/api/upload',{method:'POST',body:form});
-    if(!res.ok)throw new Error(await res.text());
+    // Step 1: get upload URL + token
+    const tokenRes=await fetch('/api/upload-url',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({filename:'latest-action.csv'})});
+    if(!tokenRes.ok)throw new Error(await tokenRes.text());
+    const {uploadUrl,token}=await tokenRes.json();
+    // Step 2: PUT directly to Vercel Blob
+    const uploadRes=await fetch(uploadUrl,{method:'PUT',headers:{'authorization':`Bearer ${token}`,'content-type':'text/csv','x-add-random-suffix':'0','x-cache-control-max-age':'0'},body:file});
+    if(!uploadRes.ok)throw new Error('Blob upload failed: '+(await uploadRes.text()));
+    // Step 3: trigger processing
+    const procRes=await fetch('/api/process',{method:'POST'});
+    if(!procRes.ok)throw new Error(await procRes.text());
     document.getElementById('lblAction').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){

@@ -1,12 +1,14 @@
-import { head } from '@vercel/blob';
+import { list } from '@vercel/blob';
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET') return res.status(405).end();
 
   try {
-    const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
-    const blob = await head('latest-data.json', { token: BLOB_TOKEN });
-    const response = await fetch(blob.url);
+    const { blobs } = await list({ token: process.env.BLOB_READ_WRITE_TOKEN, prefix: 'latest-data.json' });
+    const match = blobs.find(b => b.pathname === 'latest-data.json');
+    if (!match) return res.status(404).json({ error: 'No data yet' });
+
+    const response = await fetch(match.url);
     const data = await response.json();
 
     res.setHeader('Cache-Control', 'no-store');
