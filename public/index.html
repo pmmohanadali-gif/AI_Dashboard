@@ -325,16 +325,10 @@ document.getElementById('csvBatch').addEventListener('change',async function(e){
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblBatch').textContent='Uploading…';
   try{
-    // Step 1: get upload URL + token from server
-    const tokenRes=await fetch('/api/upload-url',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({filename:'latest-batch.csv'})});
-    if(!tokenRes.ok)throw new Error(await tokenRes.text());
-    const {uploadUrl,token}=await tokenRes.json();
-    // Step 2: PUT file directly to Vercel Blob (no size limit)
-    const uploadRes=await fetch(uploadUrl,{method:'PUT',headers:{'authorization':`Bearer ${token}`,'content-type':'text/csv','x-add-random-suffix':'0','x-cache-control-max-age':'0'},body:file});
-    if(!uploadRes.ok)throw new Error('Blob upload failed: '+(await uploadRes.text()));
-    // Step 3: trigger server-side processing
+    const res=await fetch('/api/upload',{method:'POST',headers:{'x-filename':'latest-batch.csv'},body:file});
+    if(!res.ok)throw new Error((await res.json()).error||'Upload failed');
     const procRes=await fetch('/api/process',{method:'POST'});
-    if(!procRes.ok)throw new Error(await procRes.text());
+    if(!procRes.ok)throw new Error((await procRes.json()).error||'Process failed');
     document.getElementById('lblBatch').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){
@@ -346,16 +340,10 @@ document.getElementById('csvAction').addEventListener('change',async function(e)
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblAction').textContent='Uploading…';
   try{
-    // Step 1: get upload URL + token
-    const tokenRes=await fetch('/api/upload-url',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({filename:'latest-action.csv'})});
-    if(!tokenRes.ok)throw new Error(await tokenRes.text());
-    const {uploadUrl,token}=await tokenRes.json();
-    // Step 2: PUT directly to Vercel Blob
-    const uploadRes=await fetch(uploadUrl,{method:'PUT',headers:{'authorization':`Bearer ${token}`,'content-type':'text/csv','x-add-random-suffix':'0','x-cache-control-max-age':'0'},body:file});
-    if(!uploadRes.ok)throw new Error('Blob upload failed: '+(await uploadRes.text()));
-    // Step 3: trigger processing
+    const res=await fetch('/api/upload',{method:'POST',headers:{'x-filename':'latest-action.csv'},body:file});
+    if(!res.ok)throw new Error((await res.json()).error||'Upload failed');
     const procRes=await fetch('/api/process',{method:'POST'});
-    if(!procRes.ok)throw new Error(await procRes.text());
+    if(!procRes.ok)throw new Error((await procRes.json()).error||'Process failed');
     document.getElementById('lblAction').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){
