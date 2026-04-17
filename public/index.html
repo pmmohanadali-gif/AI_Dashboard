@@ -324,24 +324,10 @@ function parseCSV(text){
 document.getElementById('csvBatch').addEventListener('change',async function(e){
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblBatch').textContent='Uploading…';
+  const form=new FormData();form.append('file',file);form.append('type','batch');
   try{
-    // Step 1: get signed upload URL from server
-    const tokenRes=await fetch('/api/upload-url',{
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body:JSON.stringify({filename:'latest-batch.csv',contentType:'text/csv'})
-    });
-    if(!tokenRes.ok)throw new Error(await tokenRes.text());
-    const {url,fields}=await tokenRes.json();
-    // Step 2: upload directly to Vercel Blob
-    const form=new FormData();
-    if(fields)Object.entries(fields).forEach(([k,v])=>form.append(k,v));
-    form.append('file',file);
-    const uploadRes=await fetch(url,{method:'POST',body:form});
-    if(!uploadRes.ok)throw new Error('Direct upload failed');
-    // Step 3: trigger processing
-    const procRes=await fetch('/api/process',{method:'POST'});
-    if(!procRes.ok)throw new Error(await procRes.text());
+    const res=await fetch('/api/upload',{method:'POST',body:form});
+    if(!res.ok)throw new Error(await res.text());
     document.getElementById('lblBatch').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){
@@ -352,24 +338,10 @@ document.getElementById('csvBatch').addEventListener('change',async function(e){
 document.getElementById('csvAction').addEventListener('change',async function(e){
   const file=e.target.files[0];if(!file)return;
   document.getElementById('lblAction').textContent='Uploading…';
+  const form=new FormData();form.append('file',file);form.append('type','action');
   try{
-    // Step 1: get signed upload URL
-    const tokenRes=await fetch('/api/upload-url',{
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body:JSON.stringify({filename:'latest-action.csv',contentType:'text/csv'})
-    });
-    if(!tokenRes.ok)throw new Error(await tokenRes.text());
-    const {url,fields}=await tokenRes.json();
-    // Step 2: upload directly to Vercel Blob
-    const form=new FormData();
-    if(fields)Object.entries(fields).forEach(([k,v])=>form.append(k,v));
-    form.append('file',file);
-    const uploadRes=await fetch(url,{method:'POST',body:form});
-    if(!uploadRes.ok)throw new Error('Direct upload failed');
-    // Step 3: trigger processing
-    const procRes=await fetch('/api/process',{method:'POST'});
-    if(!procRes.ok)throw new Error(await procRes.text());
+    const res=await fetch('/api/upload',{method:'POST',body:form});
+    if(!res.ok)throw new Error(await res.text());
     document.getElementById('lblAction').textContent=`✓ ${file.name}`;
     await loadData();
   }catch(err){
